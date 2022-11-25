@@ -31,7 +31,7 @@ import java.lang.Math;
  *
  */
 public class Retail {
-
+   public int uID;
    // reference to physical database connection.
    private Connection _connection = null;
 
@@ -398,8 +398,30 @@ public class Retail {
 
 // Rest of the functions definition go in here
 
-   public static void viewStores(Retail esql) {}
-   public static void viewProducts(Retail esql) {}
+   public static void viewStores(Retail esql) {
+	try{
+	String query = String.format("select s.storeID, s.name, calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) as dist from users u, store s where u.userID = '%d' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) < 30", esql.uID);
+	int rowCount = esql.executeQuery(query);
+	esql.executeQueryAndPrintResult(query);
+        System.out.println ("total row(s): " + rowCount);
+	}
+	catch(Exception e){
+		System.err.println (e.getMessage ());
+	}
+   }
+   public static void viewProducts(Retail esql){
+	try{
+	System.out.print("\tEnter StoreID: ");
+	String storeID = in.readLine();
+	String query = String.format("SELECT * FROM PRODUCT WHERE storeid = '%s'", storeID);
+	int rowCount = esql.executeQuery(query);
+	esql.executeQueryAndPrintResult(query);
+        System.out.println ("total row(s): " + rowCount);
+	}
+	catch(Exception e){
+		System.err.println (e.getMessage ());
+	}
+   }
    public static void placeOrder(Retail esql) {}
    public static void viewRecentOrders(Retail esql) {}
    public static void updateProduct(Retail esql) {}
