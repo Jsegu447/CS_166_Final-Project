@@ -31,7 +31,7 @@ import java.lang.Math;
  *
  */
 public class Retail {
-   public int uID;
+   public String uID;
    // reference to physical database connection.
    private Connection _connection = null;
 
@@ -265,7 +265,9 @@ public class Retail {
             String authorisedUser = null;
             switch (readChoice()){
                case 1: CreateUser(esql); break;
-               case 2: authorisedUser = LogIn(esql); break;
+               case 2: authorisedUser = LogIn(esql);
+		esql.uID = authorisedUser; 
+	       	break;
                case 9: keepon = false; break;
                default : System.out.println("Unrecognized choice!"); break;
             }//end switch
@@ -395,12 +397,11 @@ public class Retail {
          return null;
       }
    }//end
-
 // Rest of the functions definition go in here
 
    public static void viewStores(Retail esql) {
 	try{
-	String query = String.format("select s.storeID, s.name, calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) as dist from users u, store s where u.userID = '%d' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) < 30", esql.uID);
+	String query = String.format("select s.storeID, s.name, calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) as dist from users u, store s where u.name = '%s' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) < 30", esql.uID);
 	int rowCount = esql.executeQuery(query);
 	esql.executeQueryAndPrintResult(query);
         System.out.println ("total row(s): " + rowCount);
@@ -422,11 +423,68 @@ public class Retail {
 		System.err.println (e.getMessage ());
 	}
    }
-   public static void placeOrder(Retail esql) {}
+   public static void placeOrder(Retail esql) {
+	try{
+	 System.out.print("\tEnter StoreID: ");
+         String storeID = in.readLine();
+	 System.out.print("\tEnter Product Name: ");
+         String proName = in.readLine();
+	 System.out.print("\tEnter # of Units: ");
+         String unitSize = in.readLine();
+	 String query = String.format("select s.storeID, s.name, calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) as dist from users u, store s where u.name = '%s' and calculate_distance(u.latitude, u.longitude, s.latitude, s.longitude) < 30", esql.uID);
+	 List<List<String>> result = esql.executeQueryAndReturnResult(query);
+	 int size = esql.executeQuery(query);
+	 for(int i =0; i < size;i++){ 
+	 if(result.get(i).contains(storeID)){
+		int sID = Integer.parseInt(storeID);
+		query = String.format("INSERT INTO ORDERS (customerID, storeID, productName, unitsOrdered,orderTime) VALUES (1, '%d', '%s',1,NOW())", sID, proName);	
+		esql.executeQuery(query);
+		break;
+	 } 
+	else{
+	 System.out.print(result.get(i));
+	}
+	}
+	}
+	catch(Exception e){
+		System.err.println (e.getMessage ());	
+	}
+   }
    public static void viewRecentOrders(Retail esql) {}
-   public static void updateProduct(Retail esql) {}
+   public static void updateProduct(Retail esql) {
+	try{
+   		System.out.print("\tEnter StoreID: ");
+        	String storeID = in.readLine();
+        	System.out.print("\tEnter Product Name: ");
+        	String proName = in.readLine();
+   		System.out.print("\tEnter # of Units: ");
+   		String unitSize = in.readLine();
+		System.out.print("\tEnter cost: ");
+                String unitCost = in.readLine();
+		int sID = Integer.parseInt(storeID);
+		int uSize = Integer.parseInt(unitSize);
+		int uCost = Integer.parseInt(unitCost);
+	        String query = String.format("UPDATE PRODUCT SET numberOfUnits = '%d', pricePerUnit = '%d' WHERE productName = '%s' AND storeID = '%d'",uSize,uCost,proName,sID);
+		//esql.executeQuery(query);
+		//query = String.format("INSERT INTO PRODUCTUPDATES (managerID,storeID,productName,updatedOn) VALUES (1,'%d','%s',NOW())",sID,proName);		
+		//esql.executeQuery(query);
+		query = String.format("SELECT * FROM PRODUCT WHERE storeID = '%d'",sID);
+		esql.executeQueryAndPrintResult(query);		
+	}
+	catch(Exception e){
+                System.err.println (e.getMessage ());
+        }
+   }
    public static void viewRecentUpdates(Retail esql) {}
-   public static void viewPopularProducts(Retail esql) {}
+   public static void viewPopularProducts(Retail esql) {
+ 	try{
+		String query = String.format("SELECT productName,COUNT(*) FROM ORDERS WHERE STOREID = '%d' GROUP BY productName ORDER BY COUNT(*) DESC LIMIT 5",1);
+		 esql.executeQueryAndPrintResult(query);		
+	}
+	catch(Exception e){
+		System.err.println (e.getMessage ());
+	}
+   }
    public static void viewPopularCustomers(Retail esql) {}
    public static void placeProductSupplyRequests(Retail esql) {}
 
